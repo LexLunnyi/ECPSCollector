@@ -9,8 +9,14 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 
+### Conan ###
+ci/conan_imports_manifest.txt
+ci/conanbuildinfo.cmake
+ci/conanbuildinfo.txt
+ci/conaninfo.txt
+
 ### NetBeans ###
-**/nbproject/private/
+nbproject
 build/
 nbbuild/
 dist/
@@ -20,3 +26,4 @@ nbdist/
 # End of https://www.gitignore.io/api/cmake,netbeansi
 
 ECPSCollector
+lib
