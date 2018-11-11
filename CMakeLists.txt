@@ -38,6 +38,7 @@ include_directories(
     ./
     src
     include
+    include/SDL2
 )
 
 
@@ -50,7 +51,10 @@ add_subdirectory(src)
 find_package(Threads REQUIRED)
 find_library(RT rt)
 find_library(X11 X11)
-find_library(SDL2 NAMES sdl2 HINTS lib NO_DEFAULT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_PATH NO_CMAKE_SYSTEM_PATH)
+find_library(DL dl)
+find_library(SDL2 NAMES SDL2 HINTS lib NO_DEFAULT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_PATH NO_CMAKE_SYSTEM_PATH)
+#find_library(SDL2MAIN NAMES SDL2main HINTS lib NO_DEFAULT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_PATH NO_CMAKE_SYSTEM_PATH)
+
 
 link_directories(lib)
 
@@ -61,7 +65,10 @@ set(WAV_PROCESSOR_TEST_OBJ_LIBS $<TARGET_OBJECTS:src>)
 set(SO_LIBS ${CMAKE_THREAD_LIBS_INIT}
     ${SCTP}
     ${RT}
-    ${X11})
+    ${X11}
+    ${DL}
+    ${SDL2})
+    #${SDL2MAIN})
 
 add_executable(${PROJECT_NAME} ${WAV_PROCESSOR_TEST_SRC} ${WAV_PROCESSOR_TEST_OBJ_LIBS})
 target_link_libraries(${PROJECT_NAME} ${SO_LIBS})

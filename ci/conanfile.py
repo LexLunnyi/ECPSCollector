@@ -12,6 +12,7 @@ class ECPSCollectorConan(ConanFile):
 
     def imports(self):
         self.copy("*.a", "../lib", "lib")
+        self.copy("*.h", "../include", "include")
 
     def build(self):
         cmake = CMake(self)
