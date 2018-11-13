@@ -11,8 +11,8 @@ add_definitions(-D__STDC_CONSTANT_MACROS)
 
 cmake_policy(SET CMP0015 NEW)
 
-set(CMAKE_CXX_COMPILER "/usr/bin/g++")
-set(CMAKE_C_COMPILER "/usr/bin/gcc")
+set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_FLAGS "-ggdb -std=c++11")
 
 
@@ -49,9 +49,12 @@ add_subdirectory(src)
 
 
 find_package(Threads REQUIRED)
-find_library(RT rt)
-find_library(X11 X11)
-find_library(DL dl)
+#find_library(RT rt)
+#find_library(X11 X11)
+find_library(ICONV iconv)
+find_library(WINMM winmm)
+find_library(IMM32 imm32)
+find_library(LLVERSION version)
 find_library(SDL2 NAMES SDL2 HINTS lib NO_DEFAULT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_PATH NO_CMAKE_SYSTEM_PATH)
 #find_library(SDL2MAIN NAMES SDL2main HINTS lib NO_DEFAULT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_PATH NO_CMAKE_SYSTEM_PATH)
 
@@ -63,10 +66,13 @@ set(WAV_PROCESSOR_TEST_OBJ_LIBS $<TARGET_OBJECTS:src>)
 
 
 set(SO_LIBS ${CMAKE_THREAD_LIBS_INIT}
-    ${SCTP}
-    ${RT}
-    ${X11}
-    ${DL}
+    ${SRC}
+#    ${RT}
+#    ${X11}
+    ${ICONV}
+    ${WINMM}
+    ${IMM32}
+    ${LLVERSION}
     ${SDL2})
     #${SDL2MAIN})
 

@@ -1,9 +1,17 @@
 #include "main.h"
 
+int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevIns, LPSTR lpszArgument, int iShow) {
+main_common();
+return 0;
+}
 
-int main (int argc, char* argv[]) {
+
+//int main(int argc, char* argv[]) {
+
+int main_common() {
     printf("ECPSCollector STARTED\n");
     
+/*
     if (argc >= 2) {
         string act(argv[1]);
             if (act == "help") {
@@ -11,6 +19,7 @@ int main (int argc, char* argv[]) {
             return 0;
         }
     }
+*/
     
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1)  {
         printf("Error init SDL!\n");
@@ -18,7 +27,8 @@ int main (int argc, char* argv[]) {
     }
     
     SDL_Window* mainWindow = NULL;
-    mainWindow = SDL_CreateWindow("Test Window", 0, 0, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_UTILITY  );
+    //mainWindow = SDL_CreateWindow("Test Window", 0, 0, 500, 500, SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_UTILITY  );
+    mainWindow = SDL_CreateWindow("Test Window", 0, 0, 500, 500, SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS  );
     if (!mainWindow) {
         printf("Error create main window!\n");
         SDL_Quit();
