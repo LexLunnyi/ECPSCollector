@@ -48,7 +48,9 @@ file(GLOB WAV_PROCESSOR_TEST_SRC *.cpp)
 add_subdirectory(src)
 
 
+
 find_package(Threads REQUIRED)
+find_package(wxWidgets 3.1 COMPONENTS core base REQUIRED)
 #find_library(RT rt)
 #find_library(X11 X11)
 find_library(ICONV iconv)
@@ -57,6 +59,10 @@ find_library(IMM32 imm32)
 find_library(LLVERSION version)
 find_library(SDL2 NAMES SDL2 HINTS lib NO_DEFAULT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_PATH NO_CMAKE_SYSTEM_PATH)
 #find_library(SDL2MAIN NAMES SDL2main HINTS lib NO_DEFAULT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_PATH NO_CMAKE_SYSTEM_PATH)
+
+
+include(${wxWidgets_USE_FILE})
+
 
 
 link_directories(lib)
@@ -69,11 +75,7 @@ set(SO_LIBS ${CMAKE_THREAD_LIBS_INIT}
     ${SRC}
 #    ${RT}
 #    ${X11}
-    ${ICONV}
-    ${WINMM}
-    ${IMM32}
-    ${LLVERSION}
-    ${SDL2})
+    ${wxWidgets_LIBRARIES})
     #${SDL2MAIN})
 
 add_executable(${PROJECT_NAME} ${WAV_PROCESSOR_TEST_SRC} ${WAV_PROCESSOR_TEST_OBJ_LIBS})
