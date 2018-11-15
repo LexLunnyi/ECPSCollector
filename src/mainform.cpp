@@ -5,7 +5,7 @@ enum {
     ID_Hello = 1
 };
 
-wxIMPLEMENT_APP(MyApp);
+wxIMPLEMENT_APP(MyForm);
 
 
 
@@ -50,7 +50,7 @@ void MyFrame::OnHello(wxCommandEvent& event) {
 
 
 
-bool MyApp::OnInit() {
+bool MyForm::OnInit() {
     MyFrame *frame = new MyFrame();
     frame->Show(true);
     return true;
