@@ -33,3 +33,4 @@ include/iconv.h
 include/libcharset.h
 include/localcharset.h
 libECPSCollector.dll.a
+gcc_mswu

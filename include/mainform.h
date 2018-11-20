@@ -6,9 +6,11 @@
 
 class MyFrame : public wxFrame {
 public:
-    MyFrame();
+    MyFrame(const wxString& title);
 private:
-    void OnHello(wxCommandEvent& event);
+    void OnCOMOpen(wxCommandEvent& event);
+    void OnCOMClose(wxCommandEvent& event);
+    void OnFileSave(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
 };
