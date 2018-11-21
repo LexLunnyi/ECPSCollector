@@ -53,9 +53,43 @@ void MyFrame::OnAbout(wxCommandEvent& event) {
 
 
 
-void MyFrame::OnCOMOpen(wxCommandEvent& event) {
-    wxMessageBox("COM Open", "MENU", wxOK | wxICON_INFORMATION);
+void MyFrame::calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h) {
+    wxSize sz = GetClientSize();
+    *w = wxMax(0, sz.GetWidth() - GRAPHS_GAP * 2);
+    *h = wxMax(0, sz.GetHeight() - GRAPHS_GAP * 4) / 3;
+    *x = GRAPHS_GAP;
+    *y = GRAPHS_GAP + (*h + GRAPHS_GAP)*index;
+}
+
+
+
+void MyFrame::paintTest() {
+    uint32_t x, y, w, h;
     
+    calcGraphPosition(0, &x, &y, &w, &h);
+
+    MyGraph ECGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    ECGraph.render(x, y, w, h);
+    
+    calcGraphPosition(1, &x, &y, &w, &h);
+    MyGraph PhoneGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    PhoneGraph.render(x, y, w, h);
+    
+    calcGraphPosition(2, &x, &y, &w, &h);
+    MyGraph PlethysmoGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    PlethysmoGraph.render(x, y, w, h);
+    
+    //wxMessageBox(debug, "DEBUG", wxOK | wxICON_INFORMATION);
+}
+
+
+
+
+
+
+
+void MyFrame::OnCOMOpen(wxCommandEvent& event) {
+    paintTest();
     SetStatusText("COM-port was opened!");
 }
 
@@ -78,5 +112,8 @@ void MyFrame::OnFileSave(wxCommandEvent& event) {
 bool MyForm::OnInit() {
     MyFrame *frame = new MyFrame(wxT("ECPS Collector"));
     frame->Show(true);
+    frame->Maximize(true) ;
+    //frame->ShowFullScreen(true, wxSTAY_ON_TOP);
+    //frame->Show(true);
     return true;
 }
