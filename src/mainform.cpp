@@ -1,4 +1,5 @@
 #include "mainform.h"
+//#include "comdialog.h"
 
 
 enum {
@@ -36,6 +37,10 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
     Bind(wxEVT_MENU, &MyFrame::OnFileSave, this, ID_FILE_SAVE);
     Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
+    
+    //Bind(wxEVT_SIZE, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
+    //this->Append(wxID_RESIZE_FRAME);
+    //Bind(wxEVT_PAINT, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
 }
 
 
@@ -48,6 +53,11 @@ void MyFrame::OnExit(wxCommandEvent& event) {
 void MyFrame::OnAbout(wxCommandEvent& event) {
     wxMessageBox("This is a wxWidgets Hello World example",
                  "About Hello World", wxOK | wxICON_INFORMATION);
+}
+
+
+void MyFrame::OnResize(wxCommandEvent& event) {
+    paintTest();
 }
 
 
@@ -85,13 +95,20 @@ void MyFrame::paintTest() {
 
 
 
-
-
-
 void MyFrame::OnCOMOpen(wxCommandEvent& event) {
     paintTest();
-    SetStatusText("COM-port was opened!");
+
+    wxSize curSize = GetClientSize();
+    COMDialog dialog(this, wxT("Open COM-port"), curSize);
+    if (dialog.ShowModal() == wxID_OK) {
+        //wxString name = dialog.GetName();
+        //int age = dialog.GetAge();
+        //bool sex = dialog.GetSex();
+        //bool vote = dialog.GetVote();
+    }
 }
+
+
 
 
 void MyFrame::OnCOMClose(wxCommandEvent& event) {
@@ -112,8 +129,7 @@ void MyFrame::OnFileSave(wxCommandEvent& event) {
 bool MyForm::OnInit() {
     MyFrame *frame = new MyFrame(wxT("ECPS Collector"));
     frame->Show(true);
-    frame->Maximize(true) ;
-    //frame->ShowFullScreen(true, wxSTAY_ON_TOP);
-    //frame->Show(true);
+    frame->Maximize(true);
+    frame->paintTest();
     return true;
 }

@@ -4,10 +4,13 @@
 #include <wx/wx.h>
 
 #include "graph.h"
+#include "comdialog.h"
 
 class MyFrame : public wxFrame {
 public:
     MyFrame(const wxString& title);
+    
+    void paintTest();
 private:
     static const uint32_t GRAPHS_GAP = 50;
     void calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h);
@@ -17,8 +20,7 @@ private:
     void OnFileSave(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
-    
-    void paintTest();
+    void OnResize(wxCommandEvent& event);
 };
 
 
