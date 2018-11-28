@@ -1,9 +1,9 @@
 #include "mainform.h"
-//#include "comdialog.h"
+
 
 
 enum {
-    ID_COM_OPEN = 1,
+    ID_COM_OPEN  = 1,
     ID_COM_CLOSE = 2,
     ID_FILE_SAVE = 3
 };
@@ -14,10 +14,13 @@ wxIMPLEMENT_APP(MyForm);
 
 MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
     wxMenu *menuFile = new wxMenu;
-    menuFile->Append(ID_COM_OPEN, "&Open COM-port\tCtrl-O", "Open COM-port");
-    menuFile->Append(ID_COM_CLOSE, "&Close COM-port\tCtrl-C", "Close COM-port");
+    openItem = menuFile->Append(ID_COM_OPEN, "&Open COM-port\tCtrl-O", "Open COM-port");
+    openItem->Enable(true);
+    closeItem = menuFile->Append(ID_COM_CLOSE, "&Close COM-port\tCtrl-C", "Close COM-port");
+    closeItem->Enable(false);
     menuFile->AppendSeparator();
-    menuFile->Append(ID_FILE_SAVE, "&Save results ...\tCtrl-S", "Save results");
+    saveItem = menuFile->Append(ID_FILE_SAVE, "&Save results ...\tCtrl-S", "Save results");
+    saveItem->Enable(false);
     menuFile->AppendSeparator();
     menuFile->Append(wxID_EXIT);
     
@@ -41,22 +44,24 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
     //Bind(wxEVT_SIZE, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
     //this->Append(wxID_RESIZE_FRAME);
     //Bind(wxEVT_PAINT, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
+    //string debug = "COM-port: " + dialog.COMport + "; speed: " + to_string(dialog.speed);
+    //wxMessageBox(debug, "MENU", wxOK | wxICON_INFORMATION);
 }
 
 
-void MyFrame::OnExit(wxCommandEvent& event) {
+void MyFrame::OnExit(wxCommandEvent& WXUNUSED(event)) {
     Close(true);
 }
 
 
 
-void MyFrame::OnAbout(wxCommandEvent& event) {
+void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event)) {
     wxMessageBox("This is a wxWidgets Hello World example",
                  "About Hello World", wxOK | wxICON_INFORMATION);
 }
 
 
-void MyFrame::OnResize(wxCommandEvent& event) {
+void MyFrame::OnResize(wxCommandEvent& WXUNUSED(event)) {
     paintTest();
 }
 
@@ -95,32 +100,39 @@ void MyFrame::paintTest() {
 
 
 
-void MyFrame::OnCOMOpen(wxCommandEvent& event) {
+void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
     paintTest();
 
     wxSize curSize = GetClientSize();
     COMDialog dialog(this, wxT("Open COM-port"), curSize);
     if (dialog.ShowModal() == wxID_OK) {
-        //wxString name = dialog.GetName();
-        //int age = dialog.GetAge();
-        //bool sex = dialog.GetSex();
-        //bool vote = dialog.GetVote();
+        //Try to open COM-port and read data
+        if (true) {
+            openItem->Enable(false);
+            closeItem->Enable(true);
+            saveItem->Enable(true);
+            SetStatusText("COM-port was opened: " + dialog.COMport + " -> " + to_string(dialog.speed));
+        }
     }
 }
 
 
 
 
-void MyFrame::OnCOMClose(wxCommandEvent& event) {
-    wxMessageBox("COM Close", "MENU", wxOK | wxICON_INFORMATION);
+void MyFrame::OnCOMClose(wxCommandEvent& WXUNUSED(event)) {
+    //Close COM-port
+    openItem->Enable(true);
+    closeItem->Enable(false);
+    //If there is data, then enable this item
+    saveItem->Enable(true);
     
     SetStatusText("COM-port was closed!");
 }
 
 
-void MyFrame::OnFileSave(wxCommandEvent& event) {
-    wxMessageBox("File save", "MENU", wxOK | wxICON_INFORMATION);
-    
+
+void MyFrame::OnFileSave(wxCommandEvent& WXUNUSED(event)) {
+    wxMessageBox("File save", "MENU", wxOK | wxICON_INFORMATION);    
     SetStatusText("Results were saved!");
 }
 

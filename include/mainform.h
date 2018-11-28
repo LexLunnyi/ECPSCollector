@@ -13,6 +13,11 @@ public:
     void paintTest();
 private:
     static const uint32_t GRAPHS_GAP = 50;
+    
+    wxMenuItem* openItem = NULL;
+    wxMenuItem* closeItem = NULL;
+    wxMenuItem* saveItem = NULL;
+    
     void calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h);
     
     void OnCOMOpen(wxCommandEvent& event);
