@@ -26,4 +26,11 @@ nbdist/
 # End of https://www.gitignore.io/api/cmake,netbeansi
 
 ECPSCollector
+ECPSCollector.exe
 lib
+include/SDL2/
+include/iconv.h
+include/libcharset.h
+include/localcharset.h
+libECPSCollector.dll.a
+gcc_mswu
