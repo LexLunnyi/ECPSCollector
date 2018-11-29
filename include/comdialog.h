@@ -2,12 +2,14 @@
 #define COMDIALOG_H
 
 
-#include <string>
-#include <iostream>
-#include <sstream>
+#include "functions.h"
 
+
+#include <string>
 #include <wx/wx.h>
 #include <wx/combobox.h>
+
+
 
 using namespace std;
 
@@ -16,13 +18,6 @@ enum {
     ID_COM_PORT  = 10000,
     ID_SPEED     = 10001
 };
-
-
-inline string to_string(int i) {
-    std::stringstream ss;
-    ss << i;
-    return ss.str();
-}
 
 
 class COMDialog: public wxDialog {
