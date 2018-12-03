@@ -6,8 +6,11 @@
 
 
 #include <string>
+#include <vector>
 #include <wx/wx.h>
 #include <wx/combobox.h>
+#include <wx/dialog.h>
+#include <wx/stattext.h>
 
 
 
@@ -39,7 +42,7 @@ public:
     string COMport;
     unsigned int speed;
     
-    COMDialog(wxWindow* parent, const wxString& caption, const wxSize& clientSize);
+    COMDialog(wxWindow* parent, const wxString& caption, const wxSize& clientSize, vector<string>& COMs);
 };
 
 

@@ -5,6 +5,7 @@
 
 #include "graph.h"
 #include "comdialog.h"
+#include "comreader.h"
 
 class MyFrame : public wxFrame {
 public:
@@ -17,6 +18,8 @@ private:
     wxMenuItem* openItem = NULL;
     wxMenuItem* closeItem = NULL;
     wxMenuItem* saveItem = NULL;
+    
+    COMReader comReader;
     
     void calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h);
     

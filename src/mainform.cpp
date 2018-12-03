@@ -102,9 +102,17 @@ void MyFrame::paintTest() {
 
 void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
     paintTest();
+    
+    vector<string> COMs;
+    comReader.getList(COMs);
+    
+    if (COMs.size() < 1) {
+        wxMessageBox("No COM-ports found", "Warning", wxOK | wxICON_INFORMATION);
+        return;
+    }
 
     wxSize curSize = GetClientSize();
-    COMDialog dialog(this, wxT("Open COM-port"), curSize);
+    COMDialog dialog(this, wxT("Open COM-port"), curSize, COMs);
     if (dialog.ShowModal() == wxID_OK) {
         //Try to open COM-port and read data
         if (true) {

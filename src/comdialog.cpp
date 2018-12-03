@@ -16,8 +16,9 @@ wxPoint COMDialog::getDialogPos(const wxSize& clientSize) {
 
 COMDialog::COMDialog(wxWindow* parent, 
                      const wxString& caption, 
-                     const wxSize& clientSize) : wxDialog(parent, wxID_ANY, caption, getDialogPos(clientSize), getDialogSize(), wxDEFAULT_DIALOG_STYLE), 
-                     COMport("COM1"), speed(115200) {
+                     const wxSize& clientSize, 
+                     vector<string>& COMs) : wxDialog(parent, wxID_ANY, caption, getDialogPos(clientSize), getDialogSize(), wxDEFAULT_DIALOG_STYLE), 
+                     COMport(COMs[0]), speed(115200) {
     wxPoint p;
     wxSize sz(DIALOG_WIDTH - ELEM_MARGIN*3, ELEM_HEIGHT);
     
@@ -27,8 +28,7 @@ COMDialog::COMDialog(wxWindow* parent,
     wxStaticText* COMNumberText = new wxStaticText(this, wxID_ANY, wxT("COM-port:"), p, sz, 0 );
     p.y += ELEM_HEIGHT;
     wxArrayString COMstrings;
-    COMstrings.Add(wxT("COM1"));
-    COMstrings.Add(wxT("COM2"));
+    for(vector<string>::iterator it = COMs.begin(); it != COMs.end(); it++) COMstrings.Add(_((*it).c_str()));
     comboBoxCOMPort = new wxComboBox(this, ID_COM_PORT, _(COMport.c_str()), p, sz, COMstrings, wxCB_READONLY);
     p.y += ELEM_HEIGHT;
     

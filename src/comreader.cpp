@@ -3,7 +3,9 @@
 
 
 void COMReader::getList(vector<string>& list) {
-    TCHAR lpTargetPath[5000]; // buffer to store the path of the COMPORTS
+    list.clear();
+
+    TCHAR lpTargetPath[5000]; // buffer to store the path of the COM-ports
     
     list.clear();
     for (unsigned int i = 0; i < 255; i++) {
