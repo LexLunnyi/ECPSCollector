@@ -7,18 +7,32 @@
 #include <string>
 #include <vector>
 #include <windows.h>
+//#include <>
 
 using namespace std;
 
 class COMReader {
 private:
-public:
-    COMReader() {}
-    virtual ~COMReader() {}
+    string port;
+    unsigned int speed;
+    pthread_t readThread;
     
-    void getList(vector<string>& list);
+    HANDLE hPort;
+public:
+    bool opened;
+    
+    COMReader(string & port, unsigned int speed, string & error);
+    virtual ~COMReader();
+    
+    static void getList(vector<string>& list);
+    bool open(string & error);
+    void close();
+    bool read();
+    bool send(const char* pdata, unsigned int size);
+    bool tune(string & error);
 };
 
+typedef COMReader* PCOMReader;
 
 
 #endif /* COMREADER_H */

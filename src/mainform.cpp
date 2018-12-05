@@ -49,6 +49,16 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
 }
 
 
+
+
+MyFrame::~MyFrame() {
+    if (pCOMReader != NULL) delete pCOMReader;
+}
+
+
+
+
+
 void MyFrame::OnExit(wxCommandEvent& WXUNUSED(event)) {
     Close(true);
 }
@@ -104,7 +114,7 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
     paintTest();
     
     vector<string> COMs;
-    comReader.getList(COMs);
+    COMReader::getList(COMs);
     
     if (COMs.size() < 1) {
         wxMessageBox("No COM-ports found", "Warning", wxOK | wxICON_INFORMATION);
@@ -115,11 +125,17 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
     COMDialog dialog(this, wxT("Open COM-port"), curSize, COMs);
     if (dialog.ShowModal() == wxID_OK) {
         //Try to open COM-port and read data
-        if (true) {
+        string error = "";
+        pCOMReader = new COMReader(dialog.COMport, dialog.speed, error);
+        if (error.size() < 1) {
             openItem->Enable(false);
             closeItem->Enable(true);
             saveItem->Enable(true);
             SetStatusText("COM-port was opened: " + dialog.COMport + " -> " + to_string(dialog.speed));
+        } else {
+            string mes = "ERROR open COM-port " + dialog.COMport + " -> " + to_string(dialog.speed) + ": " + error;
+            wxMessageBox(mes, "ERROR", wxOK | wxICON_INFORMATION);
+            SetStatusText(mes);
         }
     }
 }
@@ -128,6 +144,8 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
 
 
 void MyFrame::OnCOMClose(wxCommandEvent& WXUNUSED(event)) {
+    if (pCOMReader != NULL) delete pCOMReader;
+    
     //Close COM-port
     openItem->Enable(true);
     closeItem->Enable(false);

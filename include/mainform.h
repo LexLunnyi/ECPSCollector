@@ -10,6 +10,7 @@
 class MyFrame : public wxFrame {
 public:
     MyFrame(const wxString& title);
+    ~MyFrame();
     
     void paintTest();
 private:
@@ -19,7 +20,7 @@ private:
     wxMenuItem* closeItem = NULL;
     wxMenuItem* saveItem = NULL;
     
-    COMReader comReader;
+    PCOMReader pCOMReader = NULL;
     
     void calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h);
     
