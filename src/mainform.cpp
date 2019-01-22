@@ -5,14 +5,15 @@
 enum {
     ID_COM_OPEN  = 1,
     ID_COM_CLOSE = 2,
-    ID_FILE_SAVE = 3
+    ID_FILE_SAVE = 3,
+    ID_TIMER     = 4
 };
 
 wxIMPLEMENT_APP(MyForm);
 
 
 
-MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
+MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title), readTimer(this, ID_TIMER) {
     wxMenu *menuFile = new wxMenu;
     openItem = menuFile->Append(ID_COM_OPEN, "&Open COM-port\tCtrl-O", "Open COM-port");
     openItem->Enable(true);
@@ -40,7 +41,9 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title) {
     Bind(wxEVT_MENU, &MyFrame::OnFileSave, this, ID_FILE_SAVE);
     Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
+    Bind(wxEVT_TIMER, &MyFrame::OnTimer, this, ID_TIMER);
     
+    readTimer.Start(2000); 
     //Bind(wxEVT_SIZE, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
     //this->Append(wxID_RESIZE_FRAME);
     //Bind(wxEVT_PAINT, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
@@ -132,6 +135,17 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
             closeItem->Enable(true);
             saveItem->Enable(true);
             SetStatusText("COM-port was opened: " + dialog.COMport + " -> " + to_string(dialog.speed));
+
+            ECGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+            PhoneGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+            PlethysmoGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+            uint32_t x, y, w, h;
+            calcGraphPosition(0, &x, &y, &w, &h);
+            ECGraph->render(x, y, w, h);
+            calcGraphPosition(1, &x, &y, &w, &h);
+            PhoneGraph->render(x, y, w, h);
+            calcGraphPosition(2, &x, &y, &w, &h);
+            PlethysmoGraph->render(x, y, w, h);
         } else {
             string mes = "ERROR open COM-port " + dialog.COMport + " -> " + to_string(dialog.speed) + ": " + error;
             wxMessageBox(mes, "ERROR", wxOK | wxICON_INFORMATION);
@@ -144,7 +158,14 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
 
 
 void MyFrame::OnCOMClose(wxCommandEvent& WXUNUSED(event)) {
-    if (pCOMReader != NULL) delete pCOMReader;
+    if (pCOMReader != NULL) {
+        delete pCOMReader;
+        pCOMReader = NULL;
+    }
+    
+    delete ECGraph;
+    delete PhoneGraph;
+    delete PlethysmoGraph;
     
     //Close COM-port
     openItem->Enable(true);
@@ -158,7 +179,7 @@ void MyFrame::OnCOMClose(wxCommandEvent& WXUNUSED(event)) {
 
 
 void MyFrame::OnFileSave(wxCommandEvent& WXUNUSED(event)) {
-    wxMessageBox("File save", "MENU", wxOK | wxICON_INFORMATION);    
+    wxMessageBox("File save", "MENU", wxOK | wxICON_INFORMATION);
     SetStatusText("Results were saved!");
 }
 
@@ -170,4 +191,42 @@ bool MyForm::OnInit() {
     frame->Maximize(true);
     frame->paintTest();
     return true;
+}
+
+
+
+void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
+    if (pCOMReader == NULL) return;
+    
+    unsigned int size = pCOMReader->getChunks(graphsData);
+    if (size < 1) return;
+    
+    //if (test) return;
+    //test = true;
+
+    //string debug = "Queue size -> " + ecps::to_string((int)size) + "; ";
+    int cnt = 0;
+    
+    uint16_t curY = 0;
+    uint16_t nextY = 0;
+    for(auto& data: graphsData) {
+        cnt++;
+        nextY = data->spiro / 20;
+        //Paint line from cur to next
+        PhoneGraph->line(cnt-1, curY, cnt, nextY);
+        curY = nextY;
+        //debug += ecps::to_hexstring(data->spiro);
+    }
+    
+    /*
+    for(list<PChunk>::iterator it = graphsData.begin(); it != graphsData.end(); it++) {
+        
+        //if (spiro > maxSpiro) maxSpiro = spiro;
+        
+        //debug += "Max spiro" ecps::to_hexstring(maxSpiro) + "-" + ecps::to_hexstring(spiro) + "-" + ecps::to_hexstring(ecg) + "  ";
+        debug += ecps::to_hexstring((*it)->)
+        cnt++;
+        if (4 == cnt) break;
+    }*/
+    //wxMessageBox(debug, "MENU", wxOK | wxICON_INFORMATION);
 }

@@ -5,12 +5,11 @@
 extern "C" void *readThreadProc(void *arg) {
     PCOMReader reader = (PCOMReader)arg;
     while(reader->opened) {
-        reader->opened = reader->read();
-        Sleep(10);
+        //if (!reader->readAsync()) break;
+        if (!reader->read()) break;
+        Sleep(50);
     }
-    
-    reader->close();
-
+    //wxMessageBox("Thread stopped", "DEBUG", wxOK | wxICON_INFORMATION);
     return NULL;
 }
 
@@ -23,38 +22,33 @@ COMReader::COMReader(string & port, unsigned int speed, string & error) {
     opened = false;
     
     //Open port
-    if (!open(error)) {
+    if (!open(error)) return;
+    
+    //Set COM-port speed
+    if (!tune(error)) {
+        CloseHandle(hPort);
         return;
+    }
+    
+    //Send init char
+    char init = 0x40;
+    if (!send(&init, 1)) {
+        error = "Error send init char";
+        CloseHandle(hPort);
     }
     
     //Create reading thread
     if (pthread_create(&readThread, NULL, readThreadProc, this)) {
         error = "Error create display thread";
-        close();
+        CloseHandle(hPort);
         return;
-    }
-    
-    //Set COM-port speed
-    if (!tune(error)) {
-        opened = false;
-        pthread_join(readThread, NULL);
-        return;
-    }
-    
-    //Send init char
-    char init = 0x01;
-    if (!send(&init, 1)) {
-        error = "Error send init char";
-        opened = false;
-        pthread_join(readThread, NULL);
     }
 }
 
 
 
 COMReader::~COMReader() {
-    opened = false;
-    pthread_join(readThread, NULL);
+    close();
 }
 
 
@@ -77,14 +71,14 @@ void COMReader::getList(vector<string>& list) {
 
 bool COMReader::open(string & error) {
     //"\\\\.\\COM4"
-    //hPort = CreateFile(port.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, NULL);
-    hPort = CreateFile("COM4", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, NULL);
+    hPort = CreateFile(port.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, NULL);
+    //hPort = CreateFile("COM4", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, NULL);
     if (hPort == INVALID_HANDLE_VALUE) {
         DWORD lastError = GetLastError();
         error = "code -> " + to_string(lastError);
-        opened = true;
         return false;
     }
+    opened = true;
     
     return true;
 }
@@ -93,12 +87,38 @@ bool COMReader::open(string & error) {
 
 
 void COMReader::close() {
-    CloseHandle(hPort);
+    if (opened) {
+        opened = false;
+        pthread_join(readThread, NULL);
+        //Send by char
+        char by = 0x40;
+        send(&by, 1);
+        CloseHandle(hPort);
+    }
 }
 
 
 
 bool COMReader::read() {
+    static const unsigned int ECPS_WORD_SIZE = sizeof(uint64_t);
+    //uint8_t buffer[ECPS_WORD_SIZE];
+    DWORD bytesRead;
+    
+    uint64_t buffer = 0;
+    if (!ReadFile(hPort, &buffer, ECPS_WORD_SIZE, &bytesRead, 0)) {
+        return false;
+    }
+    
+    //uint64_t val = (buffer[0] & 0xFF);
+    //for(uint8_t i = 1; i < ECPS_WORD_SIZE; i++) {
+    //    val = val << 8;
+    //    val |= (buffer[i] & 0xFF);
+    //}
+    dataMtx.lock();
+    data.push_back(buffer);
+    if (data.size() > MAX_QUEUE_SIZE) data.pop_front();
+    dataMtx.unlock();
+    
     return true;
 }
 
@@ -118,7 +138,8 @@ bool COMReader::send(const char* pdata, unsigned int size) {
 
 bool COMReader::tune(string & error) {
     DCB dcbSerialParameters;
-    //dcbSerialParameters.DCBlength = sizeof(DCB);
+    SecureZeroMemory(&dcbSerialParameters, sizeof(DCB));
+    dcbSerialParameters.DCBlength = sizeof(DCB);
     
     if (!GetCommState(hPort, &dcbSerialParameters)) {
         error = "error read serial options -> " + to_string(GetLastError());
@@ -139,17 +160,17 @@ bool COMReader::tune(string & error) {
             break;
         case 4800: dcbSerialParameters.BaudRate = CBR_4800;
             break;
-        case 9600: dcbSerialParameters.BaudRate = CBR_110;
+        case 9600: dcbSerialParameters.BaudRate = CBR_9600;
             break;
-        case 14400: dcbSerialParameters.BaudRate = CBR_300;
+        case 14400: dcbSerialParameters.BaudRate = CBR_14400;
             break;
-        case 19200: dcbSerialParameters.BaudRate = CBR_600;
+        case 19200: dcbSerialParameters.BaudRate = CBR_19200;
             break;
-        case 38400: dcbSerialParameters.BaudRate = CBR_1200;
+        case 38400: dcbSerialParameters.BaudRate = CBR_38400;
             break;
-        case 57600: dcbSerialParameters.BaudRate = CBR_2400;
+        case 57600: dcbSerialParameters.BaudRate = CBR_57600;
             break;
-        case 115200: dcbSerialParameters.BaudRate = CBR_4800;
+        case 115200: dcbSerialParameters.BaudRate = CBR_115200;
             break;
     }
     dcbSerialParameters.ByteSize = 8;
@@ -164,4 +185,95 @@ bool COMReader::tune(string & error) {
     
     PurgeComm(hPort, PURGE_RXCLEAR | PURGE_TXCLEAR);
     return true;
+}
+
+
+
+unsigned int COMReader::getChunks(list<PChunk> & chunks) {
+    dataMtx.lock();
+    unsigned int res = data.size();
+    
+    for(portion::iterator it = data.begin(); it != data.end(); it++) {
+        //ecg.push_back(Chunk(*it));
+        chunks.push_back(unique_ptr<Chunk>(new Chunk(*it)));
+    }
+    
+    data.clear();
+    dataMtx.unlock();
+    return res;
+}
+
+
+
+
+bool COMReader::readAsync() {
+    DWORD dwRead;
+    DWORD dwRes;
+    BOOL fWaitingOnRead = false;
+    OVERLAPPED osReader;
+    SecureZeroMemory(&osReader, sizeof (OVERLAPPED));
+    uint8_t buffer = 0;
+
+    // Create the overlapped event. Must be closed before exiting
+    // to avoid a handle leak.
+    osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    if (osReader.hEvent == NULL) return false;
+    // Error creating overlapped event; abort.
+
+    if (!fWaitingOnRead) {
+        // Issue read operation.
+        if (!ReadFile(hPort, &buffer, 1, &dwRead, &osReader)) {
+            if (GetLastError() != ERROR_IO_PENDING) {
+                // read not delayed?
+                // Error in communications; report it.
+                return false;
+            } else {
+                fWaitingOnRead = true;
+            }
+        } else {
+            // read completed immediately
+            dataMtx.lock();
+            data.push_back(buffer);
+            if (data.size() > MAX_QUEUE_SIZE) data.pop_front();
+            dataMtx.unlock();
+            return true;
+        }
+    }
+
+    if (fWaitingOnRead) {
+        dwRes = WaitForSingleObject(osReader.hEvent, 500);
+        switch (dwRes) {
+                // Read completed.
+            case WAIT_OBJECT_0:
+                if (!GetOverlappedResult(hPort, &osReader, &dwRead, FALSE)) {
+                    // Error in communications; report it.
+                    return false;
+                } else {
+                    // Read completed successfully.
+                    dataMtx.lock();
+                    data.push_back(buffer);
+                    if (data.size() > MAX_QUEUE_SIZE) data.pop_front();
+                    dataMtx.unlock();
+                    return true;
+                }
+                break;
+
+            case WAIT_TIMEOUT:
+                // Operation isn't complete yet. fWaitingOnRead flag isn't
+                // changed since I'll loop back around, and I don't want
+                // to issue another read until the first one finishes.
+                //
+                // This is a good time to do some background work.
+                break;
+
+            default:
+                // Error in the WaitForSingleObject; abort.
+                // This indicates a problem with the OVERLAPPED structure's
+                // event handle.
+                return false;
+                break;
+        }
+    }
+    return false;
 }

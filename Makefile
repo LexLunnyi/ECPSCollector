@@ -11,7 +11,7 @@ LIBDIRNAME = \
 	${WX_ROOT_PATH}\lib\$(COMPILER_PREFIX)$(COMPILER_VERSION)_$(LIBTYPE_SUFFIX)$(CFG)
 SETUPHDIR = \
 	$(LIBDIRNAME)\$(PORTNAME)$(WXUNIVNAME)$(WXUNICODEFLAG)$(WXDEBUGFLAG)
-MINIMAL_CXXFLAGS = $(__DEBUGINFO) $(__OPTIMIZEFLAG_2) $(__THREADSFLAG) \
+MINIMAL_CXXFLAGS = -std=c++11 $(__DEBUGINFO) $(__OPTIMIZEFLAG_2) $(__THREADSFLAG) \
 	$(GCCFLAGS) -DHAVE_W32API_H -D__WXMSW__ $(__WXUNIV_DEFINE_p) \
 	$(__DEBUG_DEFINE_p) $(__NDEBUG_DEFINE_p) $(__EXCEPTIONS_DEFINE_p) \
 	$(__RTTI_DEFINE_p) $(__THREAD_DEFINE_p) $(__UNICODE_DEFINE_p) \
@@ -25,7 +25,8 @@ MINIMAL_OBJECTS =  \
 	$(OBJS)\graph.o \
 	$(OBJS)\comdialog.o \
 	$(OBJS)\comreader.o \
-	$(OBJS)\functions.o
+	$(OBJS)\functions.o \
+	$(OBJS)\chunk.o
 
 ### Conditionally set variables: ###
 
@@ -234,6 +235,9 @@ $(OBJS)\comreader.o: ./src/comreader.cpp
 	$(CXX) -c -o $@ $(MINIMAL_CXXFLAGS) $(CPPDEPS) $<
 
 $(OBJS)\functions.o: ./src/functions.cpp
+	$(CXX) -c -o $@ $(MINIMAL_CXXFLAGS) $(CPPDEPS) $<
+
+$(OBJS)\chunk.o: ./src/chunk.cpp
 	$(CXX) -c -o $@ $(MINIMAL_CXXFLAGS) $(CPPDEPS) $<
 
 .PHONY: all clean

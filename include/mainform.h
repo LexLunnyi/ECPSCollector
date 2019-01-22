@@ -6,6 +6,12 @@
 #include "graph.h"
 #include "comdialog.h"
 #include "comreader.h"
+#include "functions.h"
+#include "chunk.h"
+
+
+using namespace ecps;
+
 
 class MyFrame : public wxFrame {
 public:
@@ -14,13 +20,21 @@ public:
     
     void paintTest();
 private:
+    bool test = false;
     static const uint32_t GRAPHS_GAP = 50;
+    wxTimer readTimer;
+    list<PChunk> graphsData;
+    uint16_t maxSpiro = 0;
     
     wxMenuItem* openItem = NULL;
     wxMenuItem* closeItem = NULL;
     wxMenuItem* saveItem = NULL;
     
     PCOMReader pCOMReader = NULL;
+    
+    PMyGraph ECGraph = NULL;
+    PMyGraph PhoneGraph = NULL;
+    PMyGraph PlethysmoGraph = NULL;
     
     void calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h);
     
@@ -30,6 +44,7 @@ private:
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
     void OnResize(wxCommandEvent& event);
+    void OnTimer(wxTimerEvent& event);
 };
 
 
