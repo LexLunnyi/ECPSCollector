@@ -2,6 +2,7 @@
 #define MAINFORM_H
 
 #include <wx/wx.h>
+#include <list>
 
 #include "graph.h"
 #include "comdialog.h"
@@ -32,9 +33,9 @@ private:
     
     PCOMReader pCOMReader = NULL;
     
-    PMyGraph ECGraph = NULL;
-    PMyGraph PhoneGraph = NULL;
-    PMyGraph PlethysmoGraph = NULL;
+    PMyGraph ECGGraph = NULL;
+    PMyGraph SpiroGraph = NULL;
+    PMyGraph PhotoGraph = NULL;
     
     void calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h);
     

@@ -21,5 +21,5 @@ void MyGraph::line(uint32_t x_from, uint32_t y_from, uint32_t x_to, uint32_t y_t
     wxClientDC dc(pWindow);
     dc.SetPen(*pPen);
     dc.SetBrush(*pBrush);
-    dc.DrawLine(x_from + yPos, y_from + xPos, x_to + yPos, y_to + xPos);
+    dc.DrawLine(x_from + xPos, y_from + yPos, x_to + xPos, y_to + yPos);
 }

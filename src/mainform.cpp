@@ -136,16 +136,18 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
             saveItem->Enable(true);
             SetStatusText("COM-port was opened: " + dialog.COMport + " -> " + to_string(dialog.speed));
 
-            ECGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-            PhoneGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-            PlethysmoGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+            ECGGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+            SpiroGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+            PhotoGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
             uint32_t x, y, w, h;
             calcGraphPosition(0, &x, &y, &w, &h);
-            ECGraph->render(x, y, w, h);
+            ECGGraph->render(x, y, w, h);
             calcGraphPosition(1, &x, &y, &w, &h);
-            PhoneGraph->render(x, y, w, h);
+            SpiroGraph->render(x, y, w, h);
             calcGraphPosition(2, &x, &y, &w, &h);
-            PlethysmoGraph->render(x, y, w, h);
+            PhotoGraph->render(x, y, w, h);
+            graphsData.clear();
+            Chunk::initValue = true;
         } else {
             string mes = "ERROR open COM-port " + dialog.COMport + " -> " + to_string(dialog.speed) + ": " + error;
             wxMessageBox(mes, "ERROR", wxOK | wxICON_INFORMATION);
@@ -163,9 +165,9 @@ void MyFrame::OnCOMClose(wxCommandEvent& WXUNUSED(event)) {
         pCOMReader = NULL;
     }
     
-    delete ECGraph;
-    delete PhoneGraph;
-    delete PlethysmoGraph;
+    delete ECGGraph;
+    delete SpiroGraph;
+    delete PhotoGraph;
     
     //Close COM-port
     openItem->Enable(true);
@@ -200,23 +202,58 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     
     unsigned int size = pCOMReader->getChunks(graphsData);
     if (size < 1) return;
-    
-    //if (test) return;
-    //test = true;
 
     //string debug = "Queue size -> " + ecps::to_string((int)size) + "; ";
     int cnt = 0;
+    bool first = true;
     
-    uint16_t curY = 0;
-    uint16_t nextY = 0;
+    uint16_t minSpiro = 0; uint16_t maxSpiro = 0;
+    double spiroScale = (double)(Chunk::maxSpiro - Chunk::minSpiro) / (double)SpiroGraph->getHeight();
+    uint16_t curSpiroY = 0; uint16_t nextSpiroY = 0;
+    
+    int16_t minPhoto = 0; int16_t maxPhoto = 0;
+    double photoScale = (double)(Chunk::maxPhoto - Chunk::minPhoto) / (double)PhotoGraph->getHeight();
+    uint16_t curPhotoY = 0; uint16_t nextPhotoY = 0;
+    
+    uint16_t minECG = 0; uint16_t maxECG = 0;
+    double ecgScale = (double)(Chunk::maxECG - Chunk::minECG) / (double)ECGGraph->getHeight();
+    uint16_t curECGY = 0; uint16_t nextECGY = 0;
+    
+    
     for(auto& data: graphsData) {
         cnt++;
-        nextY = data->spiro / 20;
+        uint16_t spiro = data->spiro;
+        int16_t photo = data->photo;
+        uint16_t ecg = data->ecg;
+        
+        if (first) {
+            maxSpiro = spiro; minSpiro = spiro;
+            maxPhoto = photo; minPhoto = photo;
+            maxECG = ecg;     minECG = ecg;
+            first = false;
+        } else {
+            if (spiro < minSpiro) minSpiro = spiro; if (spiro > maxSpiro) maxSpiro = spiro;
+            if (photo < minPhoto) minPhoto = photo; if (photo > maxPhoto) maxPhoto = photo;
+            if (ecg < minECG) minECG = ecg;         if (ecg > maxECG) maxECG = ecg;
+        }
+        nextSpiroY = (spiro - Chunk::minSpiro)*spiroScale;
+        nextPhotoY = (photo - Chunk::minPhoto)*photoScale;
+        nextECGY = (ecg - Chunk::minECG)*ecgScale;
+
         //Paint line from cur to next
-        PhoneGraph->line(cnt-1, curY, cnt, nextY);
-        curY = nextY;
-        //debug += ecps::to_hexstring(data->spiro);
+        SpiroGraph->line(cnt-1, curSpiroY, cnt, nextSpiroY);
+        PhotoGraph->line(cnt-1, curPhotoY, cnt, nextPhotoY);
+        ECGGraph->line(cnt-1, curECGY, cnt, nextECGY);
+        
+        curSpiroY = nextSpiroY;
+        curPhotoY = nextPhotoY;
+        curECGY = nextECGY;
     }
+    
+    Chunk::setSpiroBorders(minSpiro, maxSpiro);
+    Chunk::setPhotoBorders(minPhoto, maxPhoto);
+    Chunk::setECGBorders(minECG, maxECG);
+    
     
     /*
     for(list<PChunk>::iterator it = graphsData.begin(); it != graphsData.end(); it++) {

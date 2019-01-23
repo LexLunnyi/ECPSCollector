@@ -101,19 +101,13 @@ void COMReader::close() {
 
 bool COMReader::read() {
     static const unsigned int ECPS_WORD_SIZE = sizeof(uint64_t);
-    //uint8_t buffer[ECPS_WORD_SIZE];
     DWORD bytesRead;
     
     uint64_t buffer = 0;
     if (!ReadFile(hPort, &buffer, ECPS_WORD_SIZE, &bytesRead, 0)) {
         return false;
     }
-    
-    //uint64_t val = (buffer[0] & 0xFF);
-    //for(uint8_t i = 1; i < ECPS_WORD_SIZE; i++) {
-    //    val = val << 8;
-    //    val |= (buffer[i] & 0xFF);
-    //}
+
     dataMtx.lock();
     data.push_back(buffer);
     if (data.size() > MAX_QUEUE_SIZE) data.pop_front();
