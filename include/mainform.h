@@ -27,6 +27,8 @@ private:
     list<PChunk> graphsData;
     uint16_t maxSpiro = 0;
     
+    bool fDebug = true;
+    
     wxMenuItem* openItem = NULL;
     wxMenuItem* closeItem = NULL;
     wxMenuItem* saveItem = NULL;
@@ -46,6 +48,7 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnResize(wxCommandEvent& event);
     void OnTimer(wxTimerEvent& event);
+    void emptyGraphs();
 };
 
 

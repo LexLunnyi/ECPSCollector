@@ -43,7 +43,11 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title), readTi
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
     Bind(wxEVT_TIMER, &MyFrame::OnTimer, this, ID_TIMER);
     
-    readTimer.Start(2000); 
+    ECGGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    SpiroGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    PhotoGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    
+    readTimer.Start(1000); 
     //Bind(wxEVT_SIZE, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
     //this->Append(wxID_RESIZE_FRAME);
     //Bind(wxEVT_PAINT, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
@@ -75,7 +79,7 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event)) {
 
 
 void MyFrame::OnResize(wxCommandEvent& WXUNUSED(event)) {
-    paintTest();
+    //paintTest();
 }
 
 
@@ -114,7 +118,7 @@ void MyFrame::paintTest() {
 
 
 void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
-    paintTest();
+    //paintTest();
     
     vector<string> COMs;
     COMReader::getList(COMs);
@@ -127,6 +131,7 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
     wxSize curSize = GetClientSize();
     COMDialog dialog(this, wxT("Open COM-port"), curSize, COMs);
     if (dialog.ShowModal() == wxID_OK) {
+        fDebug = true;
         //Try to open COM-port and read data
         string error = "";
         pCOMReader = new COMReader(dialog.COMport, dialog.speed, error);
@@ -135,17 +140,6 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
             closeItem->Enable(true);
             saveItem->Enable(true);
             SetStatusText("COM-port was opened: " + dialog.COMport + " -> " + to_string(dialog.speed));
-
-            ECGGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-            SpiroGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-            PhotoGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-            uint32_t x, y, w, h;
-            calcGraphPosition(0, &x, &y, &w, &h);
-            ECGGraph->render(x, y, w, h);
-            calcGraphPosition(1, &x, &y, &w, &h);
-            SpiroGraph->render(x, y, w, h);
-            calcGraphPosition(2, &x, &y, &w, &h);
-            PhotoGraph->render(x, y, w, h);
             graphsData.clear();
             Chunk::initValue = true;
         } else {
@@ -154,6 +148,19 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
             SetStatusText(mes);
         }
     }
+}
+
+
+
+
+void MyFrame::emptyGraphs() {
+    uint32_t x, y, w, h;
+    calcGraphPosition(0, &x, &y, &w, &h);
+    ECGGraph->render(x, y, w, h);
+    calcGraphPosition(1, &x, &y, &w, &h);
+    SpiroGraph->render(x, y, w, h);
+    calcGraphPosition(2, &x, &y, &w, &h);
+    PhotoGraph->render(x, y, w, h);
 }
 
 
@@ -191,7 +198,7 @@ bool MyForm::OnInit() {
     MyFrame *frame = new MyFrame(wxT("ECPS Collector"));
     frame->Show(true);
     frame->Maximize(true);
-    frame->paintTest();
+    //frame->paintTest();
     return true;
 }
 
@@ -204,9 +211,10 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     if (size < 1) return;
 
     //string debug = "Queue size -> " + ecps::to_string((int)size) + "; ";
+    emptyGraphs();
     int cnt = 0;
     bool first = true;
-    
+
     uint16_t minSpiro = 0; uint16_t maxSpiro = 0;
     double spiroScale = (double)(Chunk::maxSpiro - Chunk::minSpiro) / (double)SpiroGraph->getHeight();
     uint16_t curSpiroY = 0; uint16_t nextSpiroY = 0;
@@ -236,9 +244,9 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
             if (photo < minPhoto) minPhoto = photo; if (photo > maxPhoto) maxPhoto = photo;
             if (ecg < minECG) minECG = ecg;         if (ecg > maxECG) maxECG = ecg;
         }
-        nextSpiroY = (spiro - Chunk::minSpiro)*spiroScale;
-        nextPhotoY = (photo - Chunk::minPhoto)*photoScale;
-        nextECGY = (ecg - Chunk::minECG)*ecgScale;
+        nextSpiroY = (spiro - Chunk::minSpiro)/spiroScale;
+        nextPhotoY = (photo - Chunk::minPhoto)/photoScale;
+        nextECGY = (ecg - Chunk::minECG)/ecgScale;
 
         //Paint line from cur to next
         SpiroGraph->line(cnt-1, curSpiroY, cnt, nextSpiroY);
@@ -254,16 +262,11 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     Chunk::setPhotoBorders(minPhoto, maxPhoto);
     Chunk::setECGBorders(minECG, maxECG);
     
-    
     /*
-    for(list<PChunk>::iterator it = graphsData.begin(); it != graphsData.end(); it++) {
-        
-        //if (spiro > maxSpiro) maxSpiro = spiro;
-        
-        //debug += "Max spiro" ecps::to_hexstring(maxSpiro) + "-" + ecps::to_hexstring(spiro) + "-" + ecps::to_hexstring(ecg) + "  ";
-        debug += ecps::to_hexstring((*it)->)
-        cnt++;
-        if (4 == cnt) break;
-    }*/
-    //wxMessageBox(debug, "MENU", wxOK | wxICON_INFORMATION);
+    if (fDebug) {
+        fDebug = false;
+        string debug = "max: " + ecps::to_string(Chunk::maxSpiro) + "; min: " + ecps::to_string(Chunk::minSpiro) + "; h: " + ecps::to_string(SpiroGraph->getHeight());
+        wxMessageBox(debug, "MENU", wxOK | wxICON_INFORMATION);
+    }
+    */
 }

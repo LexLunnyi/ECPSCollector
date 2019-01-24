@@ -34,9 +34,9 @@ Chunk::Chunk(uint64_t data) {
         if (ecg > maxECG) maxECG = ecg;
         if (ecg < minECG) minECG = ecg;
         if (photo > maxPhoto) maxPhoto = photo;
-        if (photo > maxPhoto) minPhoto = photo;
+        if (photo < minPhoto) minPhoto = photo;
         if (spiro > maxSpiro) maxSpiro = spiro;
-        if (spiro > maxSpiro) minSpiro = spiro;
+        if (spiro < minSpiro) minSpiro = spiro;
     }
 }
 
