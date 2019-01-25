@@ -207,11 +207,12 @@ bool MyForm::OnInit() {
 void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     if (pCOMReader == NULL) return;
     
-    unsigned int size = pCOMReader->getChunks(graphsData);
+    bool updated = false;
+    unsigned int size = pCOMReader->getChunks(graphsData, updated);
     if (size < 1) return;
 
     //string debug = "Queue size -> " + ecps::to_string((int)size) + "; ";
-    emptyGraphs();
+    if (updated) emptyGraphs();
     int cnt = 0;
     bool first = true;
 

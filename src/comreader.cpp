@@ -183,9 +183,16 @@ bool COMReader::tune(string & error) {
 
 
 
-unsigned int COMReader::getChunks(list<PChunk> & chunks) {
+unsigned int COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) {
     dataMtx.lock();
     unsigned int res = data.size();
+
+    int16_t maxPhoto = Chunk::maxPhoto;
+    int16_t minPhoto = Chunk::minPhoto;
+    uint16_t maxSpiro = Chunk::maxSpiro;
+    uint16_t minSpiro = Chunk::minSpiro;
+    uint16_t maxECG = Chunk::maxECG;
+    uint16_t minECG = Chunk::minECG;
     
     for(portion::iterator it = data.begin(); it != data.end(); it++) {
         //ecg.push_back(Chunk(*it));
@@ -194,6 +201,11 @@ unsigned int COMReader::getChunks(list<PChunk> & chunks) {
     
     data.clear();
     dataMtx.unlock();
+    
+    bordersChanged = ((maxPhoto != Chunk::maxPhoto) || (minPhoto != Chunk::minPhoto) || 
+        (maxSpiro != Chunk::maxSpiro) || (minSpiro != Chunk::minSpiro) || 
+        (maxECG != Chunk::maxECG) || (minECG != Chunk::minECG));
+            
     return res;
 }
 

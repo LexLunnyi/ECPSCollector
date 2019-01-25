@@ -45,7 +45,7 @@ public:
     static void getList(vector<string>& list);
     bool read();
     bool readAsync();
-    unsigned int getChunks(list<PChunk> & chunks);
+    unsigned int getChunks(list<PChunk> & chunks, bool & bordersChanged);
 };
 
 typedef COMReader* PCOMReader;
