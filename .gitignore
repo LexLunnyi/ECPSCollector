@@ -1,0 +1,35 @@
+### CMake ###
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+
+### Conan ###
+ci/conan_imports_manifest.txt
+ci/conanbuildinfo.cmake
+ci/conanbuildinfo.txt
+ci/conaninfo.txt
+
+### NetBeans ###
+nbproject
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# End of https://www.gitignore.io/api/cmake,netbeansi
+
+ECPSCollector
+ECPSCollector.exe
+lib
+include/SDL2/
+include/iconv.h
+include/libcharset.h
+include/localcharset.h
+libECPSCollector.dll.a
+gcc_mswu

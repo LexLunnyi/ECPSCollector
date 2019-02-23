@@ -1,0 +1,1 @@
+mingw32-make UNICODE=1 SHARED=0 BUILD=release MONOLITHIC=0
