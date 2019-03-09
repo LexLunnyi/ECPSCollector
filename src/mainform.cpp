@@ -7,6 +7,7 @@ enum {
     ID_COM_CLOSE = 2,
     ID_FILE_SAVE = 3,
     ID_TIMER     = 4,
+    ID_CREATE    = 5,
     ID_ECG_GRAPH_LABEL       = 20000,
     ID_SPIRO_GRAPH_LABEL     = 20001,
     ID_PLETHYSMO_GRAPH_LABEL = 20002
@@ -45,6 +46,22 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title), readTi
     Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
     Bind(wxEVT_TIMER, &MyFrame::OnTimer, this, ID_TIMER);
+    
+    //Bind(wxEVT_CREATE, &MyFrame::OnCreate, this, wxID_ANY);
+    //Connect(wxEVT_CREATE, wxWindowCreateEventHandler(MyFrame::OnCreate));
+    //Connect(wxEVT_SHOW, wxShowEventHandler(MyFrame::OnShow));
+    
+    wxPoint p(-100, -100);
+    wxSize sz(100, 25);
+    ECGLabel = new wxStaticText(this, wxID_ANY, wxT("Electrocardiogram:"), p, sz, 0 );
+    SpiroLabel = new wxStaticText(this, wxID_ANY, wxT("Spirogram:"), p, sz, 0 );
+    PlethysmoLabel = new wxStaticText(this, wxID_ANY, wxT("Plethysmogram:"), p, sz, 0 );
+    ECGGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    SpiroGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    PlethysmoGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    
+    Connect(wxEVT_PAINT, wxPaintEventHandler(MyFrame::OnPaint));
+// wxWindowCreateEvent
 
     readTimer.Start(1000);
 }
@@ -54,33 +71,46 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title), readTi
 
 
 void MyFrame::createGraphs() {
-    uint32_t x, y, w, h;
     wxPoint p;
-    wxSize sz(100, 25);
-    
-    calcGraphPosition(0, &x, &y, &w, &h);
-    p.x = x; p.y = y - 30; 
-    ECGLabel = new wxStaticText(this, wxID_ANY, wxT("Electrocardiogram:"), p, sz, 0 );
-    ECGGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);   
-    ECGGraph->render(x, y, w, h);
+    GraphSize ecgSize, spiroSize, plethysmoSize;
 
-    calcGraphPosition(1, &x, &y, &w, &h);
-    p.x = x; p.y = y - 30;
-    SpiroLabel = new wxStaticText(this, wxID_ANY, wxT("Spirogram:"), p, sz, 0 );
-    SpiroGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-    SpiroGraph->render(x, y, w, h);
+    this->ClearBackground();
     
-    calcGraphPosition(2, &x, &y, &w, &h);
-    p.x = x; p.y = y - 30;
-    PlethysmoLabel = new wxStaticText(this, wxID_ANY, wxT("Plethysmogram:"), p, sz, 0 );
-    PlethysmoGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-    PlethysmoGraph->render(x, y, w, h);
+    calcGraphPosition(0, ecgSize);
+    p.x = ecgSize.x; p.y = ecgSize.y - 30; 
+    ECGLabel->SetPosition(p);
+    calcGraphPosition(1, spiroSize);
+    p.x = spiroSize.x; p.y = spiroSize.y - 30;
+    SpiroLabel->SetPosition(p);
+    calcGraphPosition(2, plethysmoSize);
+    p.x = plethysmoSize.x; p.y = plethysmoSize.y - 30;
+    PlethysmoLabel->SetPosition(p);
+  
+    ECGGraph->render(ecgSize);
+    SpiroGraph->render(spiroSize);
+    PlethysmoGraph->render(plethysmoSize);
 }
 
 
-void MyFrame::OnCreate() {
+void MyFrame::OnCreate(wxWindowCreateEvent& WXUNUSED(event)) {
+    wxMessageBox("Creating window test", "Test", wxOK | wxICON_INFORMATION);
     createGraphs();
 }
+
+
+
+void MyFrame::OnShow(wxShowEvent& WXUNUSED(event)) {
+    wxMessageBox("Show window test", "Test", wxOK | wxICON_INFORMATION);
+    createGraphs();
+}
+
+
+void MyFrame::OnPaint(wxPaintEvent& WXUNUSED(event)) {
+    //wxMessageBox("Paint window test", "Test", wxOK | wxICON_INFORMATION);
+    createGraphs();
+}
+
+
 
 
 MyFrame::~MyFrame() {
@@ -112,12 +142,12 @@ void MyFrame::OnResize(wxCommandEvent& WXUNUSED(event)) {
 
 
 
-void MyFrame::calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h) {
+void MyFrame::calcGraphPosition(uint32_t index, GraphSize & size) {
     wxSize sz = GetClientSize();
-    *w = wxMax(0, sz.GetWidth() - GRAPHS_GAP * 2);
-    *h = wxMax(0, sz.GetHeight() - GRAPHS_GAP * 4) / 3;
-    *x = GRAPHS_GAP;
-    *y = GRAPHS_GAP + (*h + GRAPHS_GAP)*index;
+    size.width = wxMax(0, sz.GetWidth() - GRAPHS_GAP * 2);
+    size.height = wxMax(0, sz.GetHeight() - GRAPHS_GAP * 4) / 3;
+    size.x = GRAPHS_GAP;
+    size.y = GRAPHS_GAP + (size.height + GRAPHS_GAP)*index;
 }
 
 
@@ -127,6 +157,9 @@ void MyFrame::calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32
 
 
 void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
+    //wxWindowCreateEvent evt;
+    //OnCreate(evt);
+    
     vector<string> COMs;
     COMReader::getList(COMs);
     
@@ -155,19 +188,6 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
             SetStatusText(mes);
         }
     }
-}
-
-
-
-
-void MyFrame::emptyGraphs() {
-    uint32_t x, y, w, h;
-    calcGraphPosition(0, &x, &y, &w, &h);
-    ECGGraph->render(x, y, w, h);
-    calcGraphPosition(1, &x, &y, &w, &h);
-    SpiroGraph->render(x, y, w, h);
-    calcGraphPosition(2, &x, &y, &w, &h);
-    PlethysmoGraph->render(x, y, w, h);
 }
 
 
@@ -218,7 +238,6 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     if (size < 1) return;
 
     //string debug = "Queue size -> " + ecps::to_string((int)size) + "; ";
-    //if (updated) emptyGraphs();
     if (updated) createGraphs();
     int cnt = 0;
     bool first = true;

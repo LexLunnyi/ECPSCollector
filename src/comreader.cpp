@@ -195,7 +195,6 @@ unsigned int COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) 
     uint16_t minECG = Chunk::minECG;
     
     for(portion::iterator it = data.begin(); it != data.end(); it++) {
-        //ecg.push_back(Chunk(*it));
         chunks.push_back(unique_ptr<Chunk>(new Chunk(*it)));
     }
     
@@ -207,79 +206,4 @@ unsigned int COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) 
         (maxECG != Chunk::maxECG) || (minECG != Chunk::minECG));
             
     return res;
-}
-
-
-
-
-bool COMReader::readAsync() {
-    DWORD dwRead;
-    DWORD dwRes;
-    BOOL fWaitingOnRead = false;
-    OVERLAPPED osReader;
-    SecureZeroMemory(&osReader, sizeof (OVERLAPPED));
-    uint8_t buffer = 0;
-
-    // Create the overlapped event. Must be closed before exiting
-    // to avoid a handle leak.
-    osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-
-    if (osReader.hEvent == NULL) return false;
-    // Error creating overlapped event; abort.
-
-    if (!fWaitingOnRead) {
-        // Issue read operation.
-        if (!ReadFile(hPort, &buffer, 1, &dwRead, &osReader)) {
-            if (GetLastError() != ERROR_IO_PENDING) {
-                // read not delayed?
-                // Error in communications; report it.
-                return false;
-            } else {
-                fWaitingOnRead = true;
-            }
-        } else {
-            // read completed immediately
-            dataMtx.lock();
-            data.push_back(buffer);
-            if (data.size() > MAX_QUEUE_SIZE) data.pop_front();
-            dataMtx.unlock();
-            return true;
-        }
-    }
-
-    if (fWaitingOnRead) {
-        dwRes = WaitForSingleObject(osReader.hEvent, 500);
-        switch (dwRes) {
-                // Read completed.
-            case WAIT_OBJECT_0:
-                if (!GetOverlappedResult(hPort, &osReader, &dwRead, FALSE)) {
-                    // Error in communications; report it.
-                    return false;
-                } else {
-                    // Read completed successfully.
-                    dataMtx.lock();
-                    data.push_back(buffer);
-                    if (data.size() > MAX_QUEUE_SIZE) data.pop_front();
-                    dataMtx.unlock();
-                    return true;
-                }
-                break;
-
-            case WAIT_TIMEOUT:
-                // Operation isn't complete yet. fWaitingOnRead flag isn't
-                // changed since I'll loop back around, and I don't want
-                // to issue another read until the first one finishes.
-                //
-                // This is a good time to do some background work.
-                break;
-
-            default:
-                // Error in the WaitForSingleObject; abort.
-                // This indicates a problem with the OVERLAPPED structure's
-                // event handle.
-                return false;
-                break;
-        }
-    }
-    return false;
 }

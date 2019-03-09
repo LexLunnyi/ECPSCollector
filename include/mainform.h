@@ -3,6 +3,7 @@
 
 #include <wx/wx.h>
 #include <list>
+#include <wx/event.h>
 
 #include "graph.h"
 #include "comdialog.h"
@@ -18,8 +19,6 @@ class MyFrame : public wxFrame {
 public:
     MyFrame(const wxString& title);
     ~MyFrame();
-    
-    void OnCreate();
 private:
     bool test = false;
     static const uint32_t GRAPHS_GAP = 50;
@@ -43,7 +42,7 @@ private:
     wxStaticText* PlethysmoLabel = NULL;
     
     void createGraphs();
-    void calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h);
+    void calcGraphPosition(uint32_t index, GraphSize & size);
     
     void OnCOMOpen(wxCommandEvent& event);
     void OnCOMClose(wxCommandEvent& event);
@@ -52,7 +51,9 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnResize(wxCommandEvent& event);
     void OnTimer(wxTimerEvent& event);
-    void emptyGraphs();
+    void OnCreate(wxWindowCreateEvent& event);
+    void OnShow(wxShowEvent& event);
+    void OnPaint(wxPaintEvent& event);
 };
 
 

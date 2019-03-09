@@ -44,7 +44,6 @@ public:
     
     static void getList(vector<string>& list);
     bool read();
-    bool readAsync();
     unsigned int getChunks(list<PChunk> & chunks, bool & bordersChanged);
 };
 
