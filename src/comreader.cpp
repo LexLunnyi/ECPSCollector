@@ -15,7 +15,7 @@ extern "C" void *readThreadProc(void *arg) {
 
 
 
-COMReader::COMReader(string & port, unsigned int speed, string & error) {
+COMReader::COMReader(string & port, uint32_t speed, string & error) {
     this->port = port;
     this->speed = speed;
     error = "";
@@ -59,7 +59,7 @@ void COMReader::getList(vector<string>& list) {
     TCHAR lpTargetPath[5000];
     
     list.clear();
-    for (unsigned int i = 0; i < 255; i++) {
+    for (uint32_t i = 0; i < 255; i++) {
         string COMName = "COM" + to_string(i);
         DWORD res = QueryDosDevice(COMName.c_str(), (LPSTR)lpTargetPath, 5000);
         if (res != 0) list.push_back(COMName);
@@ -100,7 +100,7 @@ void COMReader::close() {
 
 
 bool COMReader::read() {
-    static const unsigned int ECPS_WORD_SIZE = sizeof(uint64_t);
+    static const uint32_t ECPS_WORD_SIZE = sizeof(uint64_t);
     DWORD bytesRead;
     
     uint64_t buffer = 0;
@@ -118,7 +118,7 @@ bool COMReader::read() {
 
 
 
-bool COMReader::send(const char* pdata, unsigned int size) {
+bool COMReader::send(const char* pdata, uint32_t size) {
     DWORD count;
     if (!WriteFile(hPort, pdata, size, &count, 0)){
         return false;
@@ -183,9 +183,9 @@ bool COMReader::tune(string & error) {
 
 
 
-unsigned int COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) {
+uint32_t COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) {
     dataMtx.lock();
-    unsigned int res = data.size();
+    uint32_t res = data.size();
 
     int16_t maxPhoto = Chunk::maxPhoto;
     int16_t minPhoto = Chunk::minPhoto;

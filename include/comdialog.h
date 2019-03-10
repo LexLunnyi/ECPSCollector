@@ -40,7 +40,7 @@ private:
     void OnOk(wxCommandEvent & event);
 public:
     string COMport;
-    unsigned int speed;
+    uint32_t speed;
     
     COMDialog(wxWindow* parent, const wxString& caption, const wxSize& clientSize, vector<string>& COMs);
 };

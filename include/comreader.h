@@ -26,7 +26,7 @@ private:
     static const int MAX_QUEUE_SIZE = 10000;
     
     string port;
-    unsigned int speed;
+    uint32_t speed;
     pthread_t readThread;
     HANDLE hPort;
     portion data;
@@ -34,17 +34,17 @@ private:
     
     bool open(string & error);
     void close();
-    bool send(const char* pdata, unsigned int size);
+    bool send(const char* pdata, uint32_t size);
     bool tune(string & error);
 public:
     bool opened;
     
-    COMReader(string & port, unsigned int speed, string & error);
+    COMReader(string & port, uint32_t speed, string & error);
     virtual ~COMReader();
     
     static void getList(vector<string>& list);
     bool read();
-    unsigned int getChunks(list<PChunk> & chunks, bool & bordersChanged);
+    uint32_t getChunks(list<PChunk> & chunks, bool & bordersChanged);
 };
 
 typedef COMReader* PCOMReader;

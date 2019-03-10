@@ -8,10 +8,10 @@ typedef unsigned __int32 uint32_t;
 
 
 struct GraphSize {
-    unsigned int x;
-    unsigned int y;
-    unsigned int width;
-    unsigned int height;
+    uint32_t x;
+    uint32_t y;
+    uint32_t width;
+    uint32_t height;
 };
 
 class MyGraph {
@@ -32,8 +32,10 @@ public:
     
     void render(GraphSize & size);
     void line(uint32_t x_from, uint32_t y_from, uint32_t x_to, uint32_t y_to);
+    void dot(uint32_t x, uint32_t y);
     
     uint32_t getHeight() {return height;}
+    uint32_t getWidth() {return width;}
 };
 
 

@@ -56,21 +56,20 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title), readTi
     ECGLabel = new wxStaticText(this, wxID_ANY, wxT("Electrocardiogram:"), p, sz, 0 );
     SpiroLabel = new wxStaticText(this, wxID_ANY, wxT("Spirogram:"), p, sz, 0 );
     PlethysmoLabel = new wxStaticText(this, wxID_ANY, wxT("Plethysmogram:"), p, sz, 0 );
-    ECGGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-    SpiroGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-    PlethysmoGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    pCustomPen = new wxPen(*wxBLACK, 3, wxPENSTYLE_SOLID);
+    pCustomBrush = new wxBrush(*wxWHITE, wxBRUSHSTYLE_SOLID);
+    ECGGraph = new MyGraph(this, pCustomPen, pCustomBrush);
+    SpiroGraph = new MyGraph(this, pCustomPen, pCustomBrush);
+    PlethysmoGraph = new MyGraph(this, pCustomPen, pCustomBrush);
     
     Connect(wxEVT_PAINT, wxPaintEventHandler(MyFrame::OnPaint));
-// wxWindowCreateEvent
 
     readTimer.Start(1000);
 }
 
 
 
-
-
-void MyFrame::createGraphs() {
+void MyFrame::emptyGraphs() {
     wxPoint p;
     GraphSize ecgSize, spiroSize, plethysmoSize;
 
@@ -94,20 +93,20 @@ void MyFrame::createGraphs() {
 
 void MyFrame::OnCreate(wxWindowCreateEvent& WXUNUSED(event)) {
     wxMessageBox("Creating window test", "Test", wxOK | wxICON_INFORMATION);
-    createGraphs();
+    emptyGraphs();
 }
 
 
 
 void MyFrame::OnShow(wxShowEvent& WXUNUSED(event)) {
     wxMessageBox("Show window test", "Test", wxOK | wxICON_INFORMATION);
-    createGraphs();
+    emptyGraphs();
 }
 
 
 void MyFrame::OnPaint(wxPaintEvent& WXUNUSED(event)) {
     //wxMessageBox("Paint window test", "Test", wxOK | wxICON_INFORMATION);
-    createGraphs();
+    emptyGraphs();
 }
 
 
@@ -130,8 +129,8 @@ void MyFrame::OnExit(wxCommandEvent& WXUNUSED(event)) {
 
 
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event)) {
-    wxMessageBox("This is a wxWidgets Hello World example",
-            "About Hello World", wxOK | wxICON_INFORMATION);
+    wxMessageBox("ECPS means ElectroCardiogram, Plethysmogram, Spirogram",
+            "About ECPSCollector", wxOK | wxICON_INFORMATION);
 }
 
 
@@ -230,15 +229,27 @@ bool MyForm::OnInit() {
 
 
 
+
 void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     if (pCOMReader == NULL) return;
     
     bool updated = false;
-    unsigned int size = pCOMReader->getChunks(graphsData, updated);
+    uint32_t size = pCOMReader->getChunks(graphsData, updated);
     if (size < 1) return;
-
-    //string debug = "Queue size -> " + ecps::to_string((int)size) + "; ";
-    if (updated) createGraphs();
+    
+    //Delete from queue invisible elements
+    uint32_t width = ECGGraph->getWidth();
+    if (graphsData.size() > width) {
+        uint32_t diff = graphsData.size() - width;
+        list<PChunk>::iterator it_first = graphsData.begin();
+        list<PChunk>::iterator it_last = graphsData.begin();
+        advance(it_last, diff);
+        graphsData.erase(it_first, it_last);
+        updated = true;
+    }
+    
+    //Paint
+    if (updated) emptyGraphs();
     int cnt = 0;
     bool first = true;
 
@@ -288,12 +299,4 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     Chunk::setSpiroBorders(minSpiro, maxSpiro);
     Chunk::setPhotoBorders(minPhoto, maxPhoto);
     Chunk::setECGBorders(minECG, maxECG);
-    
-    /*
-    if (fDebug) {
-        fDebug = false;
-        string debug = "max: " + ecps::to_string(Chunk::maxSpiro) + "; min: " + ecps::to_string(Chunk::minSpiro) + "; h: " + ecps::to_string(SpiroGraph->getHeight());
-        wxMessageBox(debug, "MENU", wxOK | wxICON_INFORMATION);
-    }
-    */
 }

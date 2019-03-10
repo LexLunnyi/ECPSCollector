@@ -41,7 +41,10 @@ private:
     PMyGraph PlethysmoGraph = NULL;
     wxStaticText* PlethysmoLabel = NULL;
     
-    void createGraphs();
+    wxPen* pCustomPen = NULL;
+    wxBrush* pCustomBrush = NULL;
+    
+    void emptyGraphs();
     void calcGraphPosition(uint32_t index, GraphSize & size);
     
     void OnCOMOpen(wxCommandEvent& event);
@@ -51,6 +54,7 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnResize(wxCommandEvent& event);
     void OnTimer(wxTimerEvent& event);
+    void OnTimerEx(wxTimerEvent& event);
     void OnCreate(wxWindowCreateEvent& event);
     void OnShow(wxShowEvent& event);
     void OnPaint(wxPaintEvent& event);
