@@ -3,6 +3,7 @@
 
 #include <wx/wx.h>
 #include <list>
+#include <wx/event.h>
 
 #include "graph.h"
 #include "comdialog.h"
@@ -18,8 +19,6 @@ class MyFrame : public wxFrame {
 public:
     MyFrame(const wxString& title);
     ~MyFrame();
-    
-    void paintTest();
 private:
     bool test = false;
     static const uint32_t GRAPHS_GAP = 50;
@@ -36,10 +35,17 @@ private:
     PCOMReader pCOMReader = NULL;
     
     PMyGraph ECGGraph = NULL;
+    wxStaticText* ECGLabel = NULL;
     PMyGraph SpiroGraph = NULL;
-    PMyGraph PhotoGraph = NULL;
+    wxStaticText* SpiroLabel = NULL;
+    PMyGraph PlethysmoGraph = NULL;
+    wxStaticText* PlethysmoLabel = NULL;
     
-    void calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h);
+    wxPen* pCustomPen = NULL;
+    wxBrush* pCustomBrush = NULL;
+    
+    void emptyGraphs();
+    void calcGraphPosition(uint32_t index, GraphSize & size);
     
     void OnCOMOpen(wxCommandEvent& event);
     void OnCOMClose(wxCommandEvent& event);
@@ -48,7 +54,10 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnResize(wxCommandEvent& event);
     void OnTimer(wxTimerEvent& event);
-    void emptyGraphs();
+    void OnTimerEx(wxTimerEvent& event);
+    void OnCreate(wxWindowCreateEvent& event);
+    void OnShow(wxShowEvent& event);
+    void OnPaint(wxPaintEvent& event);
 };
 
 

@@ -15,7 +15,7 @@ extern "C" void *readThreadProc(void *arg) {
 
 
 
-COMReader::COMReader(string & port, unsigned int speed, string & error) {
+COMReader::COMReader(string & port, uint32_t speed, string & error) {
     this->port = port;
     this->speed = speed;
     error = "";
@@ -59,7 +59,7 @@ void COMReader::getList(vector<string>& list) {
     TCHAR lpTargetPath[5000];
     
     list.clear();
-    for (unsigned int i = 0; i < 255; i++) {
+    for (uint32_t i = 0; i < 255; i++) {
         string COMName = "COM" + to_string(i);
         DWORD res = QueryDosDevice(COMName.c_str(), (LPSTR)lpTargetPath, 5000);
         if (res != 0) list.push_back(COMName);
@@ -100,7 +100,7 @@ void COMReader::close() {
 
 
 bool COMReader::read() {
-    static const unsigned int ECPS_WORD_SIZE = sizeof(uint64_t);
+    static const uint32_t ECPS_WORD_SIZE = sizeof(uint64_t);
     DWORD bytesRead;
     
     uint64_t buffer = 0;
@@ -118,7 +118,7 @@ bool COMReader::read() {
 
 
 
-bool COMReader::send(const char* pdata, unsigned int size) {
+bool COMReader::send(const char* pdata, uint32_t size) {
     DWORD count;
     if (!WriteFile(hPort, pdata, size, &count, 0)){
         return false;
@@ -183,9 +183,9 @@ bool COMReader::tune(string & error) {
 
 
 
-unsigned int COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) {
+uint32_t COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) {
     dataMtx.lock();
-    unsigned int res = data.size();
+    uint32_t res = data.size();
 
     int16_t maxPhoto = Chunk::maxPhoto;
     int16_t minPhoto = Chunk::minPhoto;
@@ -195,7 +195,6 @@ unsigned int COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) 
     uint16_t minECG = Chunk::minECG;
     
     for(portion::iterator it = data.begin(); it != data.end(); it++) {
-        //ecg.push_back(Chunk(*it));
         chunks.push_back(unique_ptr<Chunk>(new Chunk(*it)));
     }
     
@@ -207,79 +206,4 @@ unsigned int COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) 
         (maxECG != Chunk::maxECG) || (minECG != Chunk::minECG));
             
     return res;
-}
-
-
-
-
-bool COMReader::readAsync() {
-    DWORD dwRead;
-    DWORD dwRes;
-    BOOL fWaitingOnRead = false;
-    OVERLAPPED osReader;
-    SecureZeroMemory(&osReader, sizeof (OVERLAPPED));
-    uint8_t buffer = 0;
-
-    // Create the overlapped event. Must be closed before exiting
-    // to avoid a handle leak.
-    osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-
-    if (osReader.hEvent == NULL) return false;
-    // Error creating overlapped event; abort.
-
-    if (!fWaitingOnRead) {
-        // Issue read operation.
-        if (!ReadFile(hPort, &buffer, 1, &dwRead, &osReader)) {
-            if (GetLastError() != ERROR_IO_PENDING) {
-                // read not delayed?
-                // Error in communications; report it.
-                return false;
-            } else {
-                fWaitingOnRead = true;
-            }
-        } else {
-            // read completed immediately
-            dataMtx.lock();
-            data.push_back(buffer);
-            if (data.size() > MAX_QUEUE_SIZE) data.pop_front();
-            dataMtx.unlock();
-            return true;
-        }
-    }
-
-    if (fWaitingOnRead) {
-        dwRes = WaitForSingleObject(osReader.hEvent, 500);
-        switch (dwRes) {
-                // Read completed.
-            case WAIT_OBJECT_0:
-                if (!GetOverlappedResult(hPort, &osReader, &dwRead, FALSE)) {
-                    // Error in communications; report it.
-                    return false;
-                } else {
-                    // Read completed successfully.
-                    dataMtx.lock();
-                    data.push_back(buffer);
-                    if (data.size() > MAX_QUEUE_SIZE) data.pop_front();
-                    dataMtx.unlock();
-                    return true;
-                }
-                break;
-
-            case WAIT_TIMEOUT:
-                // Operation isn't complete yet. fWaitingOnRead flag isn't
-                // changed since I'll loop back around, and I don't want
-                // to issue another read until the first one finishes.
-                //
-                // This is a good time to do some background work.
-                break;
-
-            default:
-                // Error in the WaitForSingleObject; abort.
-                // This indicates a problem with the OVERLAPPED structure's
-                // event handle.
-                return false;
-                break;
-        }
-    }
-    return false;
 }

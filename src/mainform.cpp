@@ -6,7 +6,11 @@ enum {
     ID_COM_OPEN  = 1,
     ID_COM_CLOSE = 2,
     ID_FILE_SAVE = 3,
-    ID_TIMER     = 4
+    ID_TIMER     = 4,
+    ID_CREATE    = 5,
+    ID_ECG_GRAPH_LABEL       = 20000,
+    ID_SPIRO_GRAPH_LABEL     = 20001,
+    ID_PLETHYSMO_GRAPH_LABEL = 20002
 };
 
 wxIMPLEMENT_APP(MyForm);
@@ -43,16 +47,66 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title), readTi
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
     Bind(wxEVT_TIMER, &MyFrame::OnTimer, this, ID_TIMER);
     
-    ECGGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-    SpiroGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-    PhotoGraph = new MyGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
+    //Bind(wxEVT_CREATE, &MyFrame::OnCreate, this, wxID_ANY);
+    //Connect(wxEVT_CREATE, wxWindowCreateEventHandler(MyFrame::OnCreate));
+    //Connect(wxEVT_SHOW, wxShowEventHandler(MyFrame::OnShow));
     
-    readTimer.Start(1000); 
-    //Bind(wxEVT_SIZE, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
-    //this->Append(wxID_RESIZE_FRAME);
-    //Bind(wxEVT_PAINT, &MyFrame::OnResize, this, wxID_RESIZE_FRAME);
-    //string debug = "COM-port: " + dialog.COMport + "; speed: " + to_string(dialog.speed);
-    //wxMessageBox(debug, "MENU", wxOK | wxICON_INFORMATION);
+    wxPoint p(-100, -100);
+    wxSize sz(100, 25);
+    ECGLabel = new wxStaticText(this, wxID_ANY, wxT("Electrocardiogram:"), p, sz, 0 );
+    SpiroLabel = new wxStaticText(this, wxID_ANY, wxT("Spirogram:"), p, sz, 0 );
+    PlethysmoLabel = new wxStaticText(this, wxID_ANY, wxT("Plethysmogram:"), p, sz, 0 );
+    pCustomPen = new wxPen(*wxBLACK, 3, wxPENSTYLE_SOLID);
+    pCustomBrush = new wxBrush(*wxWHITE, wxBRUSHSTYLE_SOLID);
+    ECGGraph = new MyGraph(this, pCustomPen, pCustomBrush);
+    SpiroGraph = new MyGraph(this, pCustomPen, pCustomBrush);
+    PlethysmoGraph = new MyGraph(this, pCustomPen, pCustomBrush);
+    
+    Connect(wxEVT_PAINT, wxPaintEventHandler(MyFrame::OnPaint));
+
+    readTimer.Start(1000);
+}
+
+
+
+void MyFrame::emptyGraphs() {
+    wxPoint p;
+    GraphSize ecgSize, spiroSize, plethysmoSize;
+
+    this->ClearBackground();
+    
+    calcGraphPosition(0, ecgSize);
+    p.x = ecgSize.x; p.y = ecgSize.y - 30; 
+    ECGLabel->SetPosition(p);
+    calcGraphPosition(1, spiroSize);
+    p.x = spiroSize.x; p.y = spiroSize.y - 30;
+    SpiroLabel->SetPosition(p);
+    calcGraphPosition(2, plethysmoSize);
+    p.x = plethysmoSize.x; p.y = plethysmoSize.y - 30;
+    PlethysmoLabel->SetPosition(p);
+  
+    ECGGraph->render(ecgSize);
+    SpiroGraph->render(spiroSize);
+    PlethysmoGraph->render(plethysmoSize);
+}
+
+
+void MyFrame::OnCreate(wxWindowCreateEvent& WXUNUSED(event)) {
+    wxMessageBox("Creating window test", "Test", wxOK | wxICON_INFORMATION);
+    emptyGraphs();
+}
+
+
+
+void MyFrame::OnShow(wxShowEvent& WXUNUSED(event)) {
+    wxMessageBox("Show window test", "Test", wxOK | wxICON_INFORMATION);
+    emptyGraphs();
+}
+
+
+void MyFrame::OnPaint(wxPaintEvent& WXUNUSED(event)) {
+    //wxMessageBox("Paint window test", "Test", wxOK | wxICON_INFORMATION);
+    emptyGraphs();
 }
 
 
@@ -72,9 +126,11 @@ void MyFrame::OnExit(wxCommandEvent& WXUNUSED(event)) {
 
 
 
+
+
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event)) {
-    wxMessageBox("This is a wxWidgets Hello World example",
-                 "About Hello World", wxOK | wxICON_INFORMATION);
+    wxMessageBox("ECPS means ElectroCardiogram, Plethysmogram, Spirogram",
+            "About ECPSCollector", wxOK | wxICON_INFORMATION);
 }
 
 
@@ -85,40 +141,23 @@ void MyFrame::OnResize(wxCommandEvent& WXUNUSED(event)) {
 
 
 
-void MyFrame::calcGraphPosition(uint32_t index, uint32_t* x, uint32_t* y, uint32_t* w, uint32_t* h) {
+void MyFrame::calcGraphPosition(uint32_t index, GraphSize & size) {
     wxSize sz = GetClientSize();
-    *w = wxMax(0, sz.GetWidth() - GRAPHS_GAP * 2);
-    *h = wxMax(0, sz.GetHeight() - GRAPHS_GAP * 4) / 3;
-    *x = GRAPHS_GAP;
-    *y = GRAPHS_GAP + (*h + GRAPHS_GAP)*index;
+    size.width = wxMax(0, sz.GetWidth() - GRAPHS_GAP * 2);
+    size.height = wxMax(0, sz.GetHeight() - GRAPHS_GAP * 4) / 3;
+    size.x = GRAPHS_GAP;
+    size.y = GRAPHS_GAP + (size.height + GRAPHS_GAP)*index;
 }
 
 
 
-void MyFrame::paintTest() {
-    uint32_t x, y, w, h;
-    
-    calcGraphPosition(0, &x, &y, &w, &h);
-
-    MyGraph ECGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-    ECGraph.render(x, y, w, h);
-    
-    calcGraphPosition(1, &x, &y, &w, &h);
-    MyGraph PhoneGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-    PhoneGraph.render(x, y, w, h);
-    
-    calcGraphPosition(2, &x, &y, &w, &h);
-    MyGraph PlethysmoGraph(this, wxBLACK_PEN, wxWHITE_BRUSH);
-    PlethysmoGraph.render(x, y, w, h);
-    
-    //wxMessageBox(debug, "DEBUG", wxOK | wxICON_INFORMATION);
-}
 
 
 
 
 void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
-    //paintTest();
+    //wxWindowCreateEvent evt;
+    //OnCreate(evt);
     
     vector<string> COMs;
     COMReader::getList(COMs);
@@ -153,19 +192,6 @@ void MyFrame::OnCOMOpen(wxCommandEvent& WXUNUSED(event)) {
 
 
 
-void MyFrame::emptyGraphs() {
-    uint32_t x, y, w, h;
-    calcGraphPosition(0, &x, &y, &w, &h);
-    ECGGraph->render(x, y, w, h);
-    calcGraphPosition(1, &x, &y, &w, &h);
-    SpiroGraph->render(x, y, w, h);
-    calcGraphPosition(2, &x, &y, &w, &h);
-    PhotoGraph->render(x, y, w, h);
-}
-
-
-
-
 void MyFrame::OnCOMClose(wxCommandEvent& WXUNUSED(event)) {
     if (pCOMReader != NULL) {
         delete pCOMReader;
@@ -174,7 +200,7 @@ void MyFrame::OnCOMClose(wxCommandEvent& WXUNUSED(event)) {
     
     delete ECGGraph;
     delete SpiroGraph;
-    delete PhotoGraph;
+    delete PlethysmoGraph;
     
     //Close COM-port
     openItem->Enable(true);
@@ -198,9 +224,9 @@ bool MyForm::OnInit() {
     MyFrame *frame = new MyFrame(wxT("ECPS Collector"));
     frame->Show(true);
     frame->Maximize(true);
-    //frame->paintTest();
     return true;
 }
+
 
 
 
@@ -208,10 +234,21 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     if (pCOMReader == NULL) return;
     
     bool updated = false;
-    unsigned int size = pCOMReader->getChunks(graphsData, updated);
+    uint32_t size = pCOMReader->getChunks(graphsData, updated);
     if (size < 1) return;
-
-    //string debug = "Queue size -> " + ecps::to_string((int)size) + "; ";
+    
+    //Delete from queue invisible elements
+    uint32_t width = ECGGraph->getWidth();
+    if (graphsData.size() > width) {
+        uint32_t diff = graphsData.size() - width;
+        list<PChunk>::iterator it_first = graphsData.begin();
+        list<PChunk>::iterator it_last = graphsData.begin();
+        advance(it_last, diff);
+        graphsData.erase(it_first, it_last);
+        updated = true;
+    }
+    
+    //Paint
     if (updated) emptyGraphs();
     int cnt = 0;
     bool first = true;
@@ -221,7 +258,7 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     uint16_t curSpiroY = 0; uint16_t nextSpiroY = 0;
     
     int16_t minPhoto = 0; int16_t maxPhoto = 0;
-    double photoScale = (double)(Chunk::maxPhoto - Chunk::minPhoto) / (double)PhotoGraph->getHeight();
+    double photoScale = (double)(Chunk::maxPhoto - Chunk::minPhoto) / (double)PlethysmoGraph->getHeight();
     uint16_t curPhotoY = 0; uint16_t nextPhotoY = 0;
     
     uint16_t minECG = 0; uint16_t maxECG = 0;
@@ -251,7 +288,7 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
 
         //Paint line from cur to next
         SpiroGraph->line(cnt-1, curSpiroY, cnt, nextSpiroY);
-        PhotoGraph->line(cnt-1, curPhotoY, cnt, nextPhotoY);
+        PlethysmoGraph->line(cnt-1, curPhotoY, cnt, nextPhotoY);
         ECGGraph->line(cnt-1, curECGY, cnt, nextECGY);
         
         curSpiroY = nextSpiroY;
@@ -262,12 +299,4 @@ void MyFrame::OnTimer(wxTimerEvent& WXUNUSED(event)) {
     Chunk::setSpiroBorders(minSpiro, maxSpiro);
     Chunk::setPhotoBorders(minPhoto, maxPhoto);
     Chunk::setECGBorders(minECG, maxECG);
-    
-    /*
-    if (fDebug) {
-        fDebug = false;
-        string debug = "max: " + ecps::to_string(Chunk::maxSpiro) + "; min: " + ecps::to_string(Chunk::minSpiro) + "; h: " + ecps::to_string(SpiroGraph->getHeight());
-        wxMessageBox(debug, "MENU", wxOK | wxICON_INFORMATION);
-    }
-    */
 }
