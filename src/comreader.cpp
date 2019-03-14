@@ -21,6 +21,10 @@ COMReader::COMReader(string & port, uint32_t speed, string & error) {
     error = "";
     opened = false;
     
+    //Create writing to file thread
+    pfWriter = new FileWriter(error);
+    if (error.size() > 0) return;
+    
     //Open port
     if (!open(error)) return;
     
@@ -49,6 +53,7 @@ COMReader::COMReader(string & port, uint32_t speed, string & error) {
 
 COMReader::~COMReader() {
     close();
+    delete pfWriter;
 }
 
 
@@ -185,6 +190,7 @@ bool COMReader::tune(string & error) {
 
 uint32_t COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) {
     dataMtx.lock();
+    pfWriter->lock();
     uint32_t res = data.size();
 
     int16_t maxPhoto = Chunk::maxPhoto;
@@ -196,9 +202,11 @@ uint32_t COMReader::getChunks(list<PChunk> & chunks, bool & bordersChanged) {
     
     for(portion::iterator it = data.begin(); it != data.end(); it++) {
         chunks.push_back(unique_ptr<Chunk>(new Chunk(*it)));
+        pfWriter->push(*chunks.back());
     }
     
     data.clear();
+    pfWriter->unlock();
     dataMtx.unlock();
     
     bordersChanged = ((maxPhoto != Chunk::maxPhoto) || (minPhoto != Chunk::minPhoto) || 

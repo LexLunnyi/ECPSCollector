@@ -21,6 +21,11 @@ public:
     uint16_t ecg;
 
     Chunk(uint64_t data);
+    Chunk(uint16_t curEcg, uint16_t curSpiro, int16_t curPhoto) {
+        ecg = curEcg;
+        spiro = curSpiro;
+        photo = curPhoto;
+    }
     virtual ~Chunk();
     
     static void setSpiroBorders(uint16_t min, uint16_t max) {

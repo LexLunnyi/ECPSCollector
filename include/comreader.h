@@ -11,11 +11,12 @@
 #include <list>
 #include <windows.h>
 #include <fileapi.h>
+//#include <pthread.h>
 //#include <wx/wx.h>
 
 #include "functions.h"
 #include "chunk.h"
-
+#include "filewriter.h"
 
 using namespace std;
 
@@ -31,6 +32,7 @@ private:
     HANDLE hPort;
     portion data;
     mutex dataMtx;
+    FileWriter* pfWriter;
     
     bool open(string & error);
     void close();
