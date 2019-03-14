@@ -1,2 +1,2 @@
 # ECPSCollector
-Collector of signals: electrocardiogram, plethysmogram, spirogram.
+ECPS means ElectroCardiogram, Plethysmogram, Spirogram

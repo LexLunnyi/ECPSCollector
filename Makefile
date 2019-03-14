@@ -26,7 +26,8 @@ MINIMAL_OBJECTS =  \
 	$(OBJS)\comdialog.o \
 	$(OBJS)\comreader.o \
 	$(OBJS)\functions.o \
-	$(OBJS)\chunk.o
+	$(OBJS)\chunk.o \
+	$(OBJS)\filewriter.o
 
 ### Conditionally set variables: ###
 
@@ -238,6 +239,9 @@ $(OBJS)\functions.o: ./src/functions.cpp
 	$(CXX) -c -o $@ $(MINIMAL_CXXFLAGS) $(CPPDEPS) $<
 
 $(OBJS)\chunk.o: ./src/chunk.cpp
+	$(CXX) -c -o $@ $(MINIMAL_CXXFLAGS) $(CPPDEPS) $<
+
+$(OBJS)\filewriter.o: ./src/filewriter.cpp
 	$(CXX) -c -o $@ $(MINIMAL_CXXFLAGS) $(CPPDEPS) $<
 
 .PHONY: all clean
