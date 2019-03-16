@@ -69,6 +69,23 @@ MyFrame::MyFrame(const wxString& title) : wxFrame(NULL, wxID_ANY, title), readTi
 
 
 
+
+MyFrame::~MyFrame() {
+    if (pCOMReader != NULL) delete pCOMReader;
+    delete PlethysmoGraph;
+    delete SpiroGraph;
+    delete ECGGraph;
+    delete pCustomBrush;
+    delete pCustomPen;
+    delete PlethysmoLabel;
+    delete SpiroLabel;
+    delete ECGLabel;
+}
+
+
+
+
+
 void MyFrame::emptyGraphs() {
     wxPoint p;
     GraphSize ecgSize, spiroSize, plethysmoSize;
@@ -108,14 +125,6 @@ void MyFrame::OnPaint(wxPaintEvent& WXUNUSED(event)) {
     //wxMessageBox("Paint window test", "Test", wxOK | wxICON_INFORMATION);
     emptyGraphs();
 }
-
-
-
-
-MyFrame::~MyFrame() {
-    if (pCOMReader != NULL) delete pCOMReader;
-}
-
 
 
 
@@ -198,9 +207,11 @@ void MyFrame::OnCOMClose(wxCommandEvent& WXUNUSED(event)) {
         pCOMReader = NULL;
     }
     
-    delete ECGGraph;
-    delete SpiroGraph;
-    delete PlethysmoGraph;
+    graphsData.clear();
+    emptyGraphs();
+    Chunk::setSpiroBorders(0, 0);
+    Chunk::setPhotoBorders(0, 0);
+    Chunk::setECGBorders(0, 0);
     
     //Close COM-port
     openItem->Enable(true);
